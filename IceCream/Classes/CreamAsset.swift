@@ -5,10 +5,10 @@
 //  Created by Fu Yuan on 7/01/18.
 //
 
-import Foundation
-import RealmSwift
-import Realm
 import CloudKit
+import Foundation
+import Realm
+import RealmSwift
 
 /// If you want to store and sync big data automatically, then using CreamAsset might be a good choice.
 /// According to Apple https://developer.apple.com/documentation/cloudkit/ckasset :
@@ -20,14 +20,14 @@ import CloudKit
 public class CreamAsset: Object {
     @objc dynamic var uniqueFileName = ""
     @objc dynamic var data: Data?
-    override public static func ignoredProperties() -> [String] {
+    public override static func ignoredProperties() -> [String] {
         return ["data", "filePath"]
     }
 
     private convenience init(objectID: String, propName: String, data: Data) {
         self.init()
         self.data = data
-        self.uniqueFileName = "\(objectID)_\(propName)"
+        uniqueFileName = "\(objectID)_\(propName)"
         save(data: data, to: uniqueFileName)
     }
 
@@ -57,9 +57,7 @@ public class CreamAsset: Object {
     }
 
     var asset: CKAsset {
-        get {
-            return CKAsset(fileURL: filePath)
-        }
+        return CKAsset(fileURL: filePath)
     }
 
     /// Parses a CKRecord and CKAsset back into a CreamAsset
@@ -94,7 +92,6 @@ public class CreamAsset: Object {
     ///   - url: The URL of the file to store. Any path extension on the file (e.g. "mov") will be maintained
     /// - Returns: A CreamAsset if it was successful
     public static func create(object: CKRecordConvertible, propName: String, url: URL) -> CreamAsset? {
-
         return CreamAsset(objectID: object.recordID.recordName,
                           propName: propName,
                           url: url)
@@ -105,14 +102,15 @@ extension CreamAsset {
     /// The default path for the storing of CreamAsset. That is:
     /// xxx/Document/CreamAsset/
     public static func creamAssetDefaultURL() -> URL {
-        let documentDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+//        let documentDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+
+        var documentDir = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.omen")!
+        documentDir.appendPathComponent("CreamAssets")
         let commonAssetPath = documentDir.appendingPathComponent(className())
         if !FileManager.default.fileExists(atPath: commonAssetPath.path) {
             do {
-                try FileManager.default.createDirectory(atPath: commonAssetPath.path, withIntermediateDirectories: false, attributes: nil)
-            } catch {
-
-            }
+                try FileManager.default.createDirectory(atPath: commonAssetPath.path, withIntermediateDirectories: true, attributes: nil)
+            } catch {}
         }
         return commonAssetPath
     }
@@ -121,9 +119,7 @@ extension CreamAsset {
     public static func creamAssetFilesPaths() -> [String] {
         do {
             return try FileManager.default.contentsOfDirectory(atPath: CreamAsset.creamAssetDefaultURL().path)
-        } catch {
-
-        }
+        } catch {}
         return [String]()
     }
 
@@ -134,9 +130,7 @@ extension CreamAsset {
             do {
                 print("deleteCacheFiles.removeItem:", absolutePath)
                 try FileManager.default.removeItem(atPath: absolutePath)
-            } catch {
-
-            }
+            } catch {}
         }
     }
 
@@ -145,5 +139,4 @@ extension CreamAsset {
         let needToDeleteCacheFiles = creamAssetFilesPaths().filter { $0.contains(id) }
         excecuteDeletions(in: needToDeleteCacheFiles)
     }
-
 }
