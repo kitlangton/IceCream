@@ -77,11 +77,7 @@ extension SyncObject: Syncable {
             /// https://realm.io/docs/swift/latest/#objects-with-primary-keys
             realm.beginWrite()
             realm.add(object, update: true)
-            if let token = self.notificationToken {
-                try! realm.commitWrite(withoutNotifying: [token])
-            } else {
-                try! realm.commitWrite()
-            }
+            try! realm.commitWrite(withoutNotifying: [self.notificationToken!])
         }
     }
     
@@ -96,11 +92,7 @@ extension SyncObject: Syncable {
             CreamAsset.deleteCreamAssetFile(with: recordID.recordName)
             realm.beginWrite()
             realm.delete(object)
-            if let token = self.notificationToken {
-                try! realm.commitWrite(withoutNotifying: [token])
-            } else {
-                try! realm.commitWrite()
-            }
+            try! realm.commitWrite(withoutNotifying: [self.notificationToken!])
         }
     }
     
