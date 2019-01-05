@@ -33,6 +33,7 @@ public final class SyncEngine {
     public init(objects: [Syncable], container: CKContainer = CKContainer.default()) {
         defaultContainer = container
         privateDatabase = container.privateCloudDatabase
+        
 
         syncObjects = objects
         for syncObject in syncObjects {
@@ -196,6 +197,7 @@ extension SyncEngine {
                 return
             }
         }
+        
         privateDatabase.add(changesOperation)
     }
 

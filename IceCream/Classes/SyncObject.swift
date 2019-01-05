@@ -111,7 +111,11 @@ extension SyncObject: Syncable {
                 case .update(let collection, _, let insertions, let modifications):
                     let recordsToStore = (insertions + modifications).filter { $0 < collection.count }.map { collection[$0] }.filter { !$0.isDeleted }.map { $0.record }
                     let recordIDsToDelete = modifications.filter { $0 < collection.count }.map { collection[$0] }.filter { $0.isDeleted }.map { $0.recordID }
-
+                    DispatchQueue.main.async {
+                        print("RECORDS TO STORE", recordsToStore)
+                        print("RECORD IDS TO DELETE", recordIDsToDelete)
+                    }
+                    
                     guard recordsToStore.count > 0 || recordIDsToDelete.count > 0 else { return }
                     self.pipeToEngine?(recordsToStore, recordIDsToDelete)
                 case .error:
