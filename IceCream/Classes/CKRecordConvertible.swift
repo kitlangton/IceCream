@@ -13,10 +13,12 @@ public protocol CKRecordConvertible {
     static var recordType: String { get }
     static var customZoneID: CKRecordZone.ID { get }
     
+    var id: String { get }
     var recordID: CKRecord.ID { get }
     var record: CKRecord { get }
     
     var isDeleted: Bool { get }
+    var updatedAt: Date { get }
 }
 
 extension CKRecordConvertible where Self: Object {

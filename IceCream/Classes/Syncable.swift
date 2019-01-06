@@ -5,8 +5,8 @@
 //  Created by 蔡越 on 24/05/2018.
 //
 
-import Foundation
 import CloudKit
+import Foundation
 
 /// Since `sync` is an informal version of `synchronize`, so we choose the `syncable` word for
 /// the ability of synchronization.

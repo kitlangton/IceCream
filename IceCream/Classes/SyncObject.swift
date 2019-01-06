@@ -75,6 +75,14 @@ extension SyncObject: Syncable {
             }
             /// If your model class includes a primary key, you can have Realm intelligently update or add objects based off of their primary key values using Realm().add(_:update:).
             /// https://realm.io/docs/swift/latest/#objects-with-primary-keys
+            
+            // Return if persisted object has been updated since remote change
+            
+            if let previousObject = realm.object(ofType: T.self, forPrimaryKey: object.id),
+                previousObject.updatedAt > object.updatedAt {
+                return
+            }
+            
             realm.beginWrite()
             realm.add(object, update: true)
             try! realm.commitWrite(withoutNotifying: [self.notificationToken!])
@@ -89,6 +97,7 @@ extension SyncObject: Syncable {
                 // Not found in local realm database
                 return
             }
+            print("DELETING", object)
             CreamAsset.deleteCreamAssetFile(with: recordID.recordName)
             realm.beginWrite()
             realm.delete(object)
