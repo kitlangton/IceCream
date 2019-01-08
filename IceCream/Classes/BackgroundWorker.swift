@@ -1,10 +1,12 @@
 import Foundation
+import RealmSwift
 
 // Based on https://academy.realm.io/posts/realm-notifications-on-background-threads-with-swift/
 // But extended so it's able to perform multiple blocks.
-internal class BackgroundWorker: NSObject {
+public class BackgroundWorker: NSObject {
     private var thread: Thread!
     private var block: (() -> Void)!
+    var notificationTokens = [NotificationToken]()
     var runLoop: RunLoop!
 
     @objc internal func runBlock() { block() }

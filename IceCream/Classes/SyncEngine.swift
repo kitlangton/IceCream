@@ -29,6 +29,8 @@ public final class SyncEngine {
     private let errorHandler = ErrorHandler()
     private let syncObjects: [Syncable]
 
+    private let backgroundWorker = BackgroundWorker()
+    
     /// We recommend processing the initialization when app launches
     public init(objects: [Syncable], container: CKContainer = CKContainer.default()) {
         defaultContainer = container
@@ -37,10 +39,12 @@ public final class SyncEngine {
 
         syncObjects = objects
         for syncObject in syncObjects {
+            syncObject.backgroundWorker = self.backgroundWorker
             syncObject.pipeToEngine = { [weak self] recordsToStore, recordIDsToDelete in
                 guard let self = self else { return }
                 self.syncRecordsToCloudKit(recordsToStore: recordsToStore, recordIDsToDelete: recordIDsToDelete)
             }
+            
         }
 
         /// Check iCloud status so that we can go on

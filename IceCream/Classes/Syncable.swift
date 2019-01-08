@@ -29,6 +29,8 @@ public protocol Syncable: class {
     /// CloudKit related
     func pushLocalObjectsToCloudKit()
     
+    
+    var backgroundWorker : BackgroundWorker! { get set }
     /// Callback
     var pipeToEngine: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())? { get set }
 }

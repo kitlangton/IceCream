@@ -18,9 +18,7 @@ import RealmSwift
 public final class SyncObject<T> where T: Object & CKRecordConvertible & CKRecordRecoverable {
     /// Notifications are delivered as long as a reference is held to the returned notification token. We should keep a strong reference to this token on the class registering for updates, as notifications are automatically unregistered when the notification token is deallocated.
     /// For more, reference is here: https://realm.io/docs/swift/latest/#notifications
-    private var notificationToken: NotificationToken?
-    
-    private var backgroundWorker = BackgroundWorker()
+    public var backgroundWorker : BackgroundWorker!
     
     public var pipeToEngine: ((_ recordsToStore: [CKRecord], _ recordIDsToDelete: [CKRecord.ID]) -> ())?
     
@@ -79,13 +77,14 @@ extension SyncObject: Syncable {
             // Return if persisted object has been updated since remote change
             
             if let previousObject = realm.object(ofType: T.self, forPrimaryKey: object.id),
-                previousObject.updatedAt > object.updatedAt {
+                previousObject.updatedAt >= object.updatedAt {
+                print("IGNORED CHANGE prev -> new", previousObject, object)
                 return
             }
             
             realm.beginWrite()
             realm.add(object, update: true)
-            try! realm.commitWrite(withoutNotifying: [self.notificationToken!])
+            try! realm.commitWrite(withoutNotifying: self.backgroundWorker.notificationTokens)
         }
     }
     
@@ -101,7 +100,7 @@ extension SyncObject: Syncable {
             CreamAsset.deleteCreamAssetFile(with: recordID.recordName)
             realm.beginWrite()
             realm.delete(object)
-            try! realm.commitWrite(withoutNotifying: [self.notificationToken!])
+            try! realm.commitWrite(withoutNotifying: self.backgroundWorker.notificationTokens)
         }
     }
     
@@ -112,13 +111,15 @@ extension SyncObject: Syncable {
             guard let self = self else { return }
             let objects = Cream<T>().realm.objects(T.self)
             
-            self.notificationToken = objects.observe({ [weak self] changes in
+            let notificationToken = objects.observe({ [weak self] changes in
                 guard let self = self else { return }
                 switch changes {
                 case .initial:
                     break
                 case .update(let collection, _, let insertions, let modifications):
                     let recordsToStore = (insertions + modifications).filter { $0 < collection.count }.map { collection[$0] }.filter { !$0.isDeleted }.map { $0.record }
+                    
+                    
                     let recordIDsToDelete = modifications.filter { $0 < collection.count }.map { collection[$0] }.filter { $0.isDeleted }.map { $0.recordID }
                     DispatchQueue.main.async {
                         print("RECORDS TO STORE", recordsToStore)
@@ -131,6 +132,8 @@ extension SyncObject: Syncable {
                     break
                 }
             })
+            
+            self.backgroundWorker.notificationTokens.append(notificationToken)
         }
     }
     
@@ -139,7 +142,7 @@ extension SyncObject: Syncable {
             guard let self = self else { return }
             let cream = Cream<T>()
             do {
-                try cream.deletePreviousSoftDeleteObjects(notNotifying: self.notificationToken)
+                try cream.deletePreviousSoftDeleteObjects(notNotifying: self.backgroundWorker.notificationTokens)
             } catch {
                 // Error handles here
             }

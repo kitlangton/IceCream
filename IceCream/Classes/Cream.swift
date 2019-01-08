@@ -21,16 +21,9 @@ final class Cream<T: Object & CKRecordConvertible> {
 
 /// Specific manipulation of Realm
 extension Cream {
-    func deletePreviousSoftDeleteObjects(notNotifying token: NotificationToken? = nil) throws {
+    func deletePreviousSoftDeleteObjects(notNotifying tokens: [NotificationToken] = []) throws {
         let objects = realm.objects(T.self).filter { $0.isDeleted }
-        
-        let tokens: [NotificationToken]
-        if let token = token {
-            tokens = [token]
-        } else {
-            tokens = []
-        }
-        
+                
         realm.beginWrite()
         objects.forEach({ realm.delete($0) })
         try realm.commitWrite(withoutNotifying: tokens)
